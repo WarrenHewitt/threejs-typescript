@@ -13,6 +13,10 @@ module.exports = () => {
 
         devtool: 'inline-source-map',
 
+        devServer: {
+            port: 3008
+        },
+
         module: {
             rules: [
                 {

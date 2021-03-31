@@ -19,3 +19,8 @@ typescript
 ```
 
 5. 配置 tsconfig.json
+
+
+## 启动
+
+`yarn start`

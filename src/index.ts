@@ -1,11 +1,11 @@
-import LoadModule from './loadModule'
+import Demo from './demo'
 
-const mod = new LoadModule('hew')
+const demo = new Demo('hew')
 
-mod.init()
+demo.init()
 
 /* 控制显示哪个模型 */ 
 const squire = document.querySelector('#cusThree');
 
 
-console.log(mod.name);
+console.log(demo.name);
