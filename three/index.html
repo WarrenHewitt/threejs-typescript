@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>3D</title>
+    <script src="./js/three.js"></script>
+    <script src="./js/GLTFLoader.js"></script>
+    <script src="./js/OrbitControls.js"></script>
+    <style>
+        html {
+            width: 100%;
+            height: 100%;
+        }
+
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+
+        canvas {
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .main_msg{
+            position: fixed;
+            top: 100px;
+            right: 100px;
+            height: 500px;
+            width: 200px;
+            color: #fff;
+        }
+        h1{
+            font-size: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #fff;
+        }
+        .part{
+            width: 200px;
+            padding: 6px;
+            margin: 10px 0;
+            font-size: 12px;
+            line-height: 25px;
+            background-color: rgba(0, 14, 37, 0.5);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main_msg">
+        <div class="part">
+            <h1>排放浓度</h1>
+            <div>窑头颗粒物：月均 0.82mg/m^3 </div>
+            <div>窑尾颗粒物：月均 0.00mg/m^3 </div>
+            <div>厂区颗粒物：月均 0.10mg/m^3 </div>
+            <div>NOX：月均 4.58mg/m^3 </div>
+            <div>其它颗粒物：月均 0.10mg/m^3 </div>
+        </div>
+        <div class="part">
+            <h1>熟料电耗分布</h1>
+            <div>矿山：1.3 KWh/t</div>
+            <div>生料：11.2 KWh/t</div>
+            <div>煤磨：13.8 KWh/t</div>
+            <div>烧成：22.6 KWh/t</div>
+            <div>产量：13252t</div>
+        </div>
+
+    </div>
+    <div id="canvas"></div>
+    <script>
+        
+        const loading = (() => {
+            let loadingEle = null
+            return (status) => {
+                if (!loadingEle) {
+                    const divEle = document.createElement('div')
+                    const styleEle = document.createElement('style')
+                    // 底部遮罩样式
+                    const loadignStyle = '.loading{position: fixed;z-index: 1000;left: 0;top:0;width: 100%;height: 100%;background-color: rgba(0,0,0, .6)}'
+                    // loading动画样式
+                    const loadignChildStyle = '.loading div{position: absolute;width: 30px;height: 30px;top: 50%;left: 50%;margin: -15px 0 0 -15px;border: 1px solid #fff;border-right: 1px solid transparent;border-radius: 50%;animation: loading 1s linear infinite;}'
+                    divEle.setAttribute('class', 'loading')
+                    divEle.innerHTML = '<div></div>'
+                    styleEle.innerHTML = `${loadignStyle} ${loadignChildStyle} @keyframes loading {to {transform: rotate(360deg)}}`
+                    document.querySelector('head').append(styleEle)
+                    document.querySelector('body').append(divEle)
+                    loadingEle = divEle
+                } else {
+                    // 控制loading的显示与隐藏
+                    const dispalyStatus = status ? 'block' : 'none';
+                    loadingEle.setAttribute('style', `display:${dispalyStatus}`)
+                }
+            }
+        })()
+        let scene,
+            camera,
+            fieldOfView,
+            aspectRatio,
+            nearPlane,
+            farPlane,
+            renderer,
+            container,
+            rocket,
+            HEIGHT,
+            WIDTH;
+
+        const create = () => {
+            HEIGHT = window.innerHeight;
+            WIDTH = window.innerWidth;
+
+            /* 创建场景 */
+            scene = new THREE.Scene();
+            scene.rotateY(4);
+
+            /* 设置雾 */
+            // scene.fog = new THREE.Fog(0xffffff, 10, 1500);
+
+            // 坐标轴辅助  红色代表 X 轴. 绿色代表 Y 轴. 蓝色代表 Z 轴.
+            var axes = new THREE.AxesHelper(500);
+            scene.add(axes);
+
+            fieldOfView = 100;
+            aspectRatio = WIDTH / HEIGHT;
+            nearPlane = 1;
+            farPlane = 10000;
+
+            /* 创建透视相机 */
+            camera = new THREE.PerspectiveCamera(fieldOfView, aspectRatio, nearPlane, farPlane);
+            camera.position.set(1000, 1000, 1000);
+
+            /* 创建渲染器 */
+            renderer = new THREE.WebGLRenderer({
+                alpha: true,
+                antialias: true
+            });
+            renderer.setSize(WIDTH, HEIGHT);
+
+            renderer.shadowMap.enabled = true;
+
+            /* 打开阴影 */
+            renderer.shadowMapEnabled = true;
+            /* 设置场景背景色 */
+            renderer.setClearColor(0xD6D6D6,1.0)
+
+            /* 渲染到浏览器 */
+            container = document.getElementById("canvas");
+            container.appendChild(renderer.domElement);
+
+            let loader = new THREE.GLTFLoader();
+            loading()
+            loader.load("./module/factory3D.gltf", (gltf) => {
+                gltf.scene.traverse(function (node) {
+                    if ( node.isMesh ) { 
+                        node.castShadow = true; 
+                        node.material.emissiveIntensity=1;
+                        node.material.emissive = node.material.color;
+                        node.material.emissiveMap = node.material.map;
+                        gltf.receiveShadow = true;
+                    }
+                });
+
+                gltf.castShadow = true;
+                rocket = gltf.scene;
+                rocket.position.x = 100;
+                rocket.position.y = 0;
+                rocket.position.z = 0;
+                /* 初始化设置模型的大小 */
+                rocket.scale.set(0.55,0.55,0.55);
+                loading()
+                scene.add(rocket);
+            });
+        };
+
+        const createLights = () => {
+            // const ambientLight = new THREE.HemisphereLight(0xF1F1F1, 0xE5D7BD, .5);
+
+            // const spotLight = new THREE.SpotLight( 0xE4E4E4 );
+            // spotLight.position.set( 3000, 1000, 0 );
+
+            const light = new THREE.DirectionalLight(0x000000, .1);
+            light.castShadow = true
+            light.position.set(2000,2000,2000);
+            
+            // const pointLight = new THREE.PointLight(0xffffff, 2, 1000, 2);
+            // pointLight.position.set(200, -100, 50);
+
+            // var ambient = new THREE.AmbientLight(0xABABAB, 0.1);
+
+            scene.add(light);
+            // scene.add(ambientLight);
+        };
+
+        window.addEventListener("resize", () => {
+            HEIGHT = window.innerHeight;
+            WIDTH = window.innerWidth;
+            renderer.setSize(WIDTH, HEIGHT);
+            camera.aspect = WIDTH / HEIGHT;
+            camera.updateProjectionMatrix();
+        }, false);
+
+        create();
+        createLights();
+
+        const material = new THREE.LineBasicMaterial({
+            color: 0x000000
+        });
+
+        const points = [];
+        points.push(new THREE.Vector3(0, 400, 0));
+        points.push(new THREE.Vector3(100, 400, 0));
+        const geometry = new THREE.BufferGeometry().setFromPoints(points);
+        const line = new THREE.Line(geometry, material);
+        scene.add(line);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        // controls.autoRotate = true // 自动旋转
+        // controls.enableDamping  = true // 启动阻尼(惯性)
+        /* 你能够将相机放大多少（仅适用于 OrthographicCamera ），其默认值为0 */
+        // controls.minZoom = 5
+        function animate() {
+            requestAnimationFrame(animate);
+            // 如果设置了autoRotate enableDamping 必须调用 update
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        animate()
+    </script>
+
+</body>
+
+</html>
