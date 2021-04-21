@@ -5,9 +5,12 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>鼠标点击</title>
-    <script src="./three.js"></script>
-    <script src="./OrbitControls.js"></script>
+    <script src="./js/three.js"></script>
+    <script src="./js/OrbitControls.js"></script>
     <style>
+        body{
+            background-color: rgb(212, 212, 212);
+        }
         canvas {
             width: 500px;
             height: 500px;
@@ -36,6 +39,31 @@
         const HEIGHT = containerElementBCR.height
         const LEFT = containerElementBCR.left
         const TOP = containerElementBCR.top
+
+        const createText = (text) => {
+            let canvas = document.createElement('canvas');
+            canvas.width = 300
+            canvas.height = 300
+            let ctx = canvas.getContext('2d');
+
+            ctx.beginPath()
+            ctx.strokeStyle='red';
+            ctx.moveTo(10,10)
+            ctx.lineTo(200,10)
+            ctx.lineTo(200,200)
+            ctx.lineTo(10,200)
+            ctx.lineTo(10,10)
+            ctx.stroke()
+            
+            ctx.font = 'bolder 16px Arial';
+            ctx.fillStyle = '#fff';
+            ctx.fillText(text || '中文文字', 20, 30);
+            ctx.globalAlpha = 0;
+
+            document.body.appendChild(canvas)
+        }
+
+        createText()
 
         /* 场景 */
         const scene = new THREE.Scene()

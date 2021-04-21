@@ -2,10 +2,10 @@
 <html lang="en">
 
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <title>3D</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>device-with-card</title>
     <script src="./js/three.js"></script>
     <script src="./js/GLTFLoader.js"></script>
     <script src="./js/OrbitControls.js"></script>
@@ -32,7 +32,7 @@
             height: 100vh;
         }
 
-        .main_msg{
+        .main_msg {
             position: fixed;
             top: 100px;
             right: 100px;
@@ -40,12 +40,14 @@
             width: 200px;
             color: #fff;
         }
-        h1{
+
+        h1 {
             font-size: 16px;
             padding-bottom: 8px;
             border-bottom: 1px solid #fff;
         }
-        .part{
+
+        .part {
             width: 200px;
             padding: 6px;
             margin: 10px 0;
@@ -78,7 +80,30 @@
     </div>
     <div id="canvas"></div>
     <script>
-        
+
+        const createText = (text) => {
+            let canvas = document.createElement('canvas');
+            let ctx = canvas.getContext('2d');
+            canvas.width = 240
+            canvas.height = 240
+
+            ctx.beginPath()
+            ctx.strokeStyle='#fff';
+            ctx.moveTo(10,10)
+            ctx.lineTo(200,10)
+            ctx.lineTo(200,200)
+            ctx.lineTo(10,200)
+            ctx.lineTo(10,10)
+            ctx.stroke()
+            
+            ctx.font = 'bolder 16px Arial';
+            ctx.fillStyle = '#fff';
+            ctx.fillText(text || '中文文字', 20, 30);
+            ctx.globalAlpha = 0;
+
+            return ctx.canvas
+        }
+
         const loading = (() => {
             let loadingEle = null
             return (status) => {
@@ -110,7 +135,6 @@
             farPlane,
             renderer,
             container,
-            rocket,
             HEIGHT,
             WIDTH;
 
@@ -120,7 +144,7 @@
 
             /* 创建场景 */
             scene = new THREE.Scene();
-            scene.rotateY(4);
+            // scene.rotateY(4);
 
             /* 设置雾 */
             // scene.fog = new THREE.Fog(0xffffff, 10, 1500);
@@ -144,13 +168,12 @@
                 antialias: true
             });
             renderer.setSize(WIDTH, HEIGHT);
+            renderer.setClearColor(0x011339,1.0)
 
             renderer.shadowMap.enabled = true;
 
             /* 打开阴影 */
             renderer.shadowMapEnabled = true;
-            /* 设置场景背景色 */
-            renderer.setClearColor(0xD6D6D6,1.0)
 
             /* 渲染到浏览器 */
             container = document.getElementById("canvas");
@@ -158,46 +181,32 @@
 
             let loader = new THREE.GLTFLoader();
             loading()
-            loader.load("./module/factory3D.gltf", (gltf) => {
+            loader.load("./module/xuanFengYuRe.gltf", (gltf) => {
                 gltf.scene.traverse(function (node) {
-                    if ( node.isMesh ) { 
-                        node.castShadow = true; 
-                        node.material.emissiveIntensity=1;
+                    if (node.isMesh) {
+                        node.castShadow = true;
+                        node.material.emissiveIntensity = 1;
                         node.material.emissive = node.material.color;
                         node.material.emissiveMap = node.material.map;
-                        gltf.receiveShadow = true;
                     }
                 });
 
                 gltf.castShadow = true;
-                rocket = gltf.scene;
-                rocket.position.x = 100;
-                rocket.position.y = 0;
-                rocket.position.z = 0;
-                /* 初始化设置模型的大小 */
-                rocket.scale.set(0.55,0.55,0.55);
+                gScene = gltf.scene;
+                gScene.position.x = 0;
+                gScene.position.y = 0;
+                gScene.position.z = 0;
+                gScene.scale.set(1, 1, 1);
                 loading()
-                scene.add(rocket);
+                scene.add(gScene);
             });
         };
 
         const createLights = () => {
-            // const ambientLight = new THREE.HemisphereLight(0xF1F1F1, 0xE5D7BD, .5);
-
-            // const spotLight = new THREE.SpotLight( 0xE4E4E4 );
-            // spotLight.position.set( 3000, 1000, 0 );
-
             const light = new THREE.DirectionalLight(0x000000, .1);
             light.castShadow = true
-            light.position.set(2000,2000,2000);
-            
-            // const pointLight = new THREE.PointLight(0xffffff, 2, 1000, 2);
-            // pointLight.position.set(200, -100, 50);
-
-            // var ambient = new THREE.AmbientLight(0xABABAB, 0.1);
-
+            light.position.set(2000, 2000, 2000);
             scene.add(light);
-            // scene.add(ambientLight);
         };
 
         window.addEventListener("resize", () => {
@@ -218,18 +227,46 @@
         const points = [];
         points.push(new THREE.Vector3(0, 400, 0));
         points.push(new THREE.Vector3(100, 400, 0));
+
         const geometry = new THREE.BufferGeometry().setFromPoints(points);
+
         const line = new THREE.Line(geometry, material);
         scene.add(line);
+        
+        /* 添加文字 */
+        const canvasTexture = new THREE.CanvasTexture(createText())
+        /* 平面几何 */
+        const geometryT = new THREE.PlaneGeometry( 200, 200 );
+        var materialT = new THREE.MeshPhongMaterial({
+            color: 0xCF0B4B,
+            // 设置纹理贴图
+            map: canvasTexture, 
+        });
+        /* 材质透明 */
+        // materialT.colorWrite = true
+        // materialT.transparent = true
+        const planeT = new THREE.Mesh( geometryT, materialT );
+        planeT.position.set(400, 700, 0)
+        scene.add( planeT );
+        // camera.add( planeT );
+
+        function addLint() {
+            const material = new THREE.LineBasicMaterial({
+                color: 0xF59A0D
+            });
+            const points = [];
+            points.push( new THREE.Vector3( 0, 570, 30 ) );
+            points.push( new THREE.Vector3( 240, 550, 0 ) );
+            const geometry = new THREE.BufferGeometry().setFromPoints( points );
+            const line = new THREE.Line( geometry, material );
+            scene.add( line );
+        }
+        addLint()
 
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
-        // controls.autoRotate = true // 自动旋转
-        // controls.enableDamping  = true // 启动阻尼(惯性)
-        /* 你能够将相机放大多少（仅适用于 OrthographicCamera ），其默认值为0 */
-        // controls.minZoom = 5
+        controls.maxPolarAngle = 1
         function animate() {
             requestAnimationFrame(animate);
-            // 如果设置了autoRotate enableDamping 必须调用 update
             controls.update();
             renderer.render(scene, camera);
         }
