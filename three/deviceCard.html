@@ -84,22 +84,29 @@
         const createText = (text) => {
             let canvas = document.createElement('canvas');
             let ctx = canvas.getContext('2d');
-            canvas.width = 240
-            canvas.height = 240
+            canvas.width = 200
+            canvas.height = 200
+
+            const num = 140
 
             ctx.beginPath()
             ctx.strokeStyle='#fff';
             ctx.moveTo(10,10)
-            ctx.lineTo(200,10)
-            ctx.lineTo(200,200)
-            ctx.lineTo(10,200)
+            ctx.lineTo(num,10)
+            ctx.lineTo(num,num)
+            ctx.lineTo(10,num)
             ctx.lineTo(10,10)
             ctx.stroke()
             
             ctx.font = 'bolder 16px Arial';
             ctx.fillStyle = '#fff';
-            ctx.fillText(text || '中文文字', 20, 30);
-            ctx.globalAlpha = 0;
+            ctx.fillText(text || '测点信息', 20, 30);
+            ctx.font = 'bolder 12px Arial';
+            ctx.fillText('温度：40℃', 20, 60);
+            ctx.fillText('X轴：0.12m/s2', 20, 80);
+            ctx.fillText('Y轴：0.12m/s2', 20, 100);
+            ctx.fillText('Z轴：0.21m/s2', 20, 120);
+            // ctx.globalAlpha = 0;
 
             return ctx.canvas
         }
@@ -237,18 +244,20 @@
         const canvasTexture = new THREE.CanvasTexture(createText())
         /* 平面几何 */
         const geometryT = new THREE.PlaneGeometry( 200, 200 );
-        var materialT = new THREE.MeshPhongMaterial({
-            color: 0xCF0B4B,
+        var materialT = new THREE.MeshBasicMaterial({
+            color: 0xffffff,
             // 设置纹理贴图
             map: canvasTexture, 
+            transparent: true,
         });
         /* 材质透明 */
         // materialT.colorWrite = true
         // materialT.transparent = true
         const planeT = new THREE.Mesh( geometryT, materialT );
-        planeT.position.set(400, 700, 0)
+        planeT.position.set(300, 600, 0)
         scene.add( planeT );
-        // camera.add( planeT );
+        planeT.center()
+        planeT.rotateY(0.5)
 
         function addLint() {
             const material = new THREE.LineBasicMaterial({
@@ -256,7 +265,7 @@
             });
             const points = [];
             points.push( new THREE.Vector3( 0, 570, 30 ) );
-            points.push( new THREE.Vector3( 240, 550, 0 ) );
+            points.push( new THREE.Vector3( 200, 570, 0 ) );
             const geometry = new THREE.BufferGeometry().setFromPoints( points );
             const line = new THREE.Line( geometry, material );
             scene.add( line );
@@ -268,6 +277,9 @@
         function animate() {
             requestAnimationFrame(animate);
             controls.update();
+            /* 水平旋转 */
+            // planeT.rotateY(controls.getAzimuthalAngle())
+            // console.log( );
             renderer.render(scene, camera);
         }
 
