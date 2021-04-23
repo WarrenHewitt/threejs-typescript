@@ -80,25 +80,40 @@
     </div>
     <div id="canvas"></div>
     <script>
-
+        const cardW = 160
         const createText = (text) => {
             let canvas = document.createElement('canvas');
             let ctx = canvas.getContext('2d');
-            canvas.width = 240
-            canvas.height = 240
+            const n = cardW - 5
+            const w = 5
+
+            canvas.width = cardW
+            canvas.height = cardW
 
             ctx.beginPath()
             ctx.strokeStyle='#fff';
-            ctx.moveTo(10,10)
-            ctx.lineTo(200,10)
-            ctx.lineTo(200,200)
-            ctx.lineTo(10,200)
-            ctx.lineTo(10,10)
+            ctx.lineWidth = 2
+            ctx.moveTo(w,w)
+            ctx.lineTo(n,w)
+            ctx.lineTo(n,n)
+            ctx.lineTo(w,n)
+            ctx.lineTo(w,w)
             ctx.stroke()
             
             ctx.font = 'bolder 16px Arial';
             ctx.fillStyle = '#fff';
-            ctx.fillText(text || '中文文字', 20, 30);
+            ctx.fillText('测点信息', 20, 30);
+            ctx.font = 'bolder 14px Arial';
+            ctx.fillText('温度：23.5℃', 20, 60);
+            ctx.fillText('X轴：0.12 m/s2', 20, 80);
+            ctx.fillText('Y轴：0.12 m/s2', 20, 100);
+            ctx.fillText('Z轴：0.21 m/s2', 20, 120);
+            // PLC
+            // A相电流：0.00A
+            // B相电流：0.00A
+            // C相电流：0.00A
+            // 温度：undefined℃
+            // 排气口压力：0.00MPa
             ctx.globalAlpha = 0;
 
             return ctx.canvas
@@ -144,7 +159,7 @@
 
             /* 创建场景 */
             scene = new THREE.Scene();
-            // scene.rotateY(4);
+            scene.rotateY(0);
 
             /* 设置雾 */
             // scene.fog = new THREE.Fog(0xffffff, 10, 1500);
@@ -160,7 +175,8 @@
 
             /* 创建透视相机 */
             camera = new THREE.PerspectiveCamera(fieldOfView, aspectRatio, nearPlane, farPlane);
-            camera.position.set(1000, 1000, 1000);
+            const camNum = 700
+            camera.position.set(camNum, camNum, camNum);
 
             /* 创建渲染器 */
             renderer = new THREE.WebGLRenderer({
@@ -220,51 +236,71 @@
         create();
         createLights();
 
-        const material = new THREE.LineBasicMaterial({
-            color: 0x000000
-        });
-
-        const points = [];
-        points.push(new THREE.Vector3(0, 400, 0));
-        points.push(new THREE.Vector3(100, 400, 0));
-
-        const geometry = new THREE.BufferGeometry().setFromPoints(points);
-
-        const line = new THREE.Line(geometry, material);
-        scene.add(line);
         
         /* 添加文字 */
         const canvasTexture = new THREE.CanvasTexture(createText())
         /* 平面几何 */
-        const geometryT = new THREE.PlaneGeometry( 200, 200 );
-        var materialT = new THREE.MeshPhongMaterial({
-            color: 0xCF0B4B,
+        const geometryT = new THREE.PlaneGeometry( cardW, cardW );
+        var materialT = new THREE.MeshBasicMaterial({
+            color: 0xffffff,
             // 设置纹理贴图
             map: canvasTexture, 
+            /* 材质透明 */
+            transparent: true,
         });
-        /* 材质透明 */
-        // materialT.colorWrite = true
-        // materialT.transparent = true
         const planeT = new THREE.Mesh( geometryT, materialT );
-        planeT.position.set(400, 700, 0)
-        scene.add( planeT );
-        // camera.add( planeT );
+        planeT.position.set(cardW/2, cardW/2, -30)
+        planeT.rotateY(0.7)
+        planeT.rotateX(-0.4)
+        const group = new THREE.Group();
+        group.position.set(300, 600, 300)
+        group.rotateY(0)
+        group.rotateX(0)
+        group.add(planeT);
+        scene.add(group);
 
-        function addLint() {
+        function addLine() {
             const material = new THREE.LineBasicMaterial({
                 color: 0xF59A0D
             });
             const points = [];
             points.push( new THREE.Vector3( 0, 570, 30 ) );
-            points.push( new THREE.Vector3( 240, 550, 0 ) );
+            points.push( new THREE.Vector3( 300, 600, 300 ) );
             const geometry = new THREE.BufferGeometry().setFromPoints( points );
             const line = new THREE.Line( geometry, material );
+            const points1 = [];
+            points1.push( new THREE.Vector3( 300, 600, 300 ) );
+            points1.push( new THREE.Vector3( 300, 900, 300 ) );
+            const geometry1 = new THREE.BufferGeometry().setFromPoints( points1 );
+            const line1 = new THREE.Line( geometry1, material );
+            const points2 = [];
+            points2.push( new THREE.Vector3( 300, 600, 300 ) );
+            points2.push( new THREE.Vector3( 600, 600, 300 ) );
+            const geometry2 = new THREE.BufferGeometry().setFromPoints( points2 );
+            const line2 = new THREE.Line( geometry2, material );
             scene.add( line );
+            scene.add( line1 );
+            scene.add( line2 );
         }
-        addLint()
+        addLine()
 
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        /* 你能够垂直旋转的角度的上限，范围是0到Math.PI，其默认值为Math.PI */
         controls.maxPolarAngle = 1
+        let originalY = controls.getAzimuthalAngle()
+        let originalX = controls.getPolarAngle()
+        let angelY = 0
+        let angelX = 0
+        controls.addEventListener('change', () =>{
+            angelY = controls.getAzimuthalAngle()
+            angelX = controls.getPolarAngle()
+            console.log('Y-', angelY);
+            console.log('X-', angelX);
+            group.rotateY(angelY - originalY)
+            // group.rotateX(angelX - originalX)
+            originalY = angelY
+            originalX = angelX
+        })
         function animate() {
             requestAnimationFrame(animate);
             controls.update();
