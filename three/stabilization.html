@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>device-with-card</title>
+    <script src="./js/three.js"></script>
+    <script src="./js/GLTFLoader.js"></script>
+    <script src="./js/OrbitControls.js"></script>
+    <style>
+        html {
+            width: 100%;
+            height: 100%;
+        }
+
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: rgb(218, 218, 218);
+        }
+
+        canvas {
+            width: 100vw;
+            height: 100vh;
+        }
+
+        
+    </style>
+</head>
+
+<body>
+    <div id="canvas"></div>
+
+    <script>
+
+        const createText = (text) => {
+            let canvas = document.createElement('canvas');
+            let ctx = canvas.getContext('2d');
+            const borderW = 2
+
+            canvas.width = boxW
+            canvas.height = boxH
+
+            ctx.beginPath()
+            ctx.strokeStyle='#0C894A';
+            ctx.lineWidth = 2
+            ctx.moveTo(0,0)
+            ctx.lineTo(boxW,0)
+            ctx.lineTo(boxW,boxH)
+            ctx.lineTo(0,boxH)
+            ctx.stroke()
+            
+            ctx.font = 'bolder 16px Arial';
+            ctx.fillStyle = '#0C894A';
+            ctx.fillText('一些文字', 20, 30);
+            ctx.globalAlpha = 0;
+            console.log('excute text');
+
+            return ctx.canvas
+        }
+
+        let scene,
+            camera,
+            fieldOfView,
+            aspectRatio,
+            nearPlane,
+            farPlane,
+            renderer,
+            container,
+            HEIGHT = window.innerHeight,
+            WIDTH = window.innerWidth,
+            boxW = 160,
+            boxH = 200,
+            // 文字框分组
+            group = null;
+
+        function addBox() {
+            /* 添加文字 */
+            const canvasTexture = new THREE.CanvasTexture(createText())
+            /* 平面几何 */
+            const geometryT = new THREE.PlaneGeometry( boxW, boxH );
+            var materialT = new THREE.MeshBasicMaterial({
+                color: 0x000000,
+                // 设置纹理贴图
+                map: canvasTexture, 
+                /* 材质透明 */
+                // transparent: true,
+            });
+            const planeT = new THREE.Mesh( geometryT, materialT );
+            planeT.position.set(boxW/2, boxH/2, 0)
+            // planeT.rotateY(0.7)
+            // planeT.rotateX(-0.4)
+            group = new THREE.Group();
+            // group.position.set(300, 600, 300)
+            // group.rotateY(0)
+            // group.rotateX(0)
+            group.add(planeT);
+            scene.add(group);
+        }
+
+        /* 创建一个正方体 */
+        const createCube = () => {
+            /* 立方体 */
+            var cubeGeometry = new THREE.BoxGeometry()
+
+            /* 材质 */
+            var cubeMaterial = new THREE.MeshLambertMaterial({ color: 0x00ff00 })
+
+            cube = new THREE.Mesh(cubeGeometry, cubeMaterial)
+            /* 打开阴影 */
+            cube.castShadow = true
+
+            /* 设置立方体的位置 */
+            cube.position.x = 0
+            cube.position.y = 0
+            cube.position.z = 0
+
+            /* 将立方体加入到场景 */
+            scene.add(cube)
+
+            console.log('create cube');
+        }
+
+        const createAxesHelper = () => {
+            // 坐标轴辅助  红色代表 X 轴. 绿色代表 Y 轴. 蓝色代表 Z 轴.
+            var axes = new THREE.AxesHelper(500);
+            // axes.center()
+            scene.add(axes);
+        }
+
+        /**
+         * 创建灯光
+         */
+        const createLight = () => {
+            
+            const light = new THREE.DirectionalLight( 0xffffff, 0.5 );
+            // light.position(0,1,0)
+            scene.add(light)
+            // const light = new THREE.DirectionalLight(0xffffff);
+            // light.castShadow = true
+            // light.position.set(2000, 2000, 2000);
+            // scene.add(light);
+        }
+
+        /**
+         * 创建场景
+         */
+        const createScene = () => {
+            scene = new THREE.Scene();
+            // scene.rotateY(0);
+        }
+
+        /**
+         * 创建相机
+         */
+        const createCamera = () => {
+            fieldOfView = 50;
+            aspectRatio = WIDTH / HEIGHT;
+            nearPlane = 1;
+            farPlane = 10000;
+
+            /* 创建透视相机 */
+            camera = new THREE.PerspectiveCamera(fieldOfView, aspectRatio, nearPlane, farPlane);
+            const camNum = 100
+            camera.position.x = 500
+            camera.position.y = 500
+            camera.position.z = 1000
+            // camera.position.set(camNum, camNum, camNum);
+            // 相机默认是由正z轴看像-z轴（相机镜头对着-z轴方向拍）
+            camera.lookAt(0,0,0)
+        }  
+
+        /**
+         * 创建渲染器
+         */
+        const createRender = () => {
+             renderer = new THREE.WebGLRenderer({
+                alpha: true,
+                antialias: true
+            });
+            renderer.setSize(WIDTH, HEIGHT);
+            // renderer.setClearColor(0x011339,1.0)
+            renderer.render(scene, camera);
+
+            /* 渲染到浏览器 */
+            container = document.getElementById('canvas');
+            container.appendChild(renderer.domElement);
+        }
+
+        /**
+         * 初始化
+         * */
+        const initThree = () => {
+            createScene()
+            
+            createCamera()
+            
+            createAxesHelper()
+
+            createCube()
+
+            // createLight()
+
+            createRender()
+
+            // animate()
+        };
+
+        /*
+         * 动画
+        */
+        const animate = function () {
+            requestAnimationFrame( animate );
+            cube.rotation.x += 0.01;
+            // cube.rotation.y += 0.01;
+            camera.position.x+=0.5
+            camera.position.z+=0.5
+
+            renderer.render( scene, camera );
+        };
+
+        initThree()
+
+        
+    </script>
+
+</body>
+
+</html>
