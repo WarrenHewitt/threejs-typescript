@@ -55,13 +55,21 @@
             line-height: 25px;
             background-color: rgba(0, 14, 37, 0.5);
         }
+        #reset { 
+            position: fixed;
+            right: 100px;
+            top: 30px;
+            padding: 10px 15px;
+            color: #fff;
+            background-color: rgb(7, 15, 119);            
+        }
     </style>
 </head>
 
 <body>
     <div class="main_msg">
         <div class="part">
-            <h1>排放浓度</h1>
+            <h1>信息2</h1>
             <div>窑头颗粒物：月均 0.82mg/m^3 </div>
             <div>窑尾颗粒物：月均 0.00mg/m^3 </div>
             <div>厂区颗粒物：月均 0.10mg/m^3 </div>
@@ -69,44 +77,54 @@
             <div>其它颗粒物：月均 0.10mg/m^3 </div>
         </div>
         <div class="part">
-            <h1>熟料电耗分布</h1>
+            <h1>信息2</h1>
             <div>矿山：1.3 KWh/t</div>
             <div>生料：11.2 KWh/t</div>
             <div>煤磨：13.8 KWh/t</div>
             <div>烧成：22.6 KWh/t</div>
             <div>产量：13252t</div>
         </div>
-
     </div>
+
+    <div id="reset">复位</div>
+
     <div id="canvas"></div>
     <script>
-
+        const cardW = 160
         const createText = (text) => {
             let canvas = document.createElement('canvas');
             let ctx = canvas.getContext('2d');
-            canvas.width = 200
-            canvas.height = 200
+            const n = cardW - 5
+            const w = 5
 
-            const num = 140
+            canvas.width = cardW
+            canvas.height = cardW
 
             ctx.beginPath()
             ctx.strokeStyle='#fff';
-            ctx.moveTo(10,10)
-            ctx.lineTo(num,10)
-            ctx.lineTo(num,num)
-            ctx.lineTo(10,num)
-            ctx.lineTo(10,10)
+            ctx.lineWidth = 2
+            ctx.moveTo(w,w)
+            ctx.lineTo(n,w)
+            ctx.lineTo(n,n)
+            ctx.lineTo(w,n)
+            ctx.lineTo(w,w)
             ctx.stroke()
             
             ctx.font = 'bolder 16px Arial';
             ctx.fillStyle = '#fff';
-            ctx.fillText(text || '测点信息', 20, 30);
-            ctx.font = 'bolder 12px Arial';
-            ctx.fillText('温度：40℃', 20, 60);
-            ctx.fillText('X轴：0.12m/s2', 20, 80);
-            ctx.fillText('Y轴：0.12m/s2', 20, 100);
-            ctx.fillText('Z轴：0.21m/s2', 20, 120);
-            // ctx.globalAlpha = 0;
+            ctx.fillText('测点信息', 20, 30);
+            ctx.font = 'bolder 14px Arial';
+            ctx.fillText('温度：23.5℃', 20, 60);
+            ctx.fillText('X轴：0.12 m/s2', 20, 80);
+            ctx.fillText('Y轴：0.12 m/s2', 20, 100);
+            ctx.fillText('Z轴：0.21 m/s2', 20, 120);
+            // PLC
+            // A相电流：0.00A
+            // B相电流：0.00A
+            // C相电流：0.00A
+            // 温度：undefined℃
+            // 排气口压力：0.00MPa
+            ctx.globalAlpha = 0;
 
             return ctx.canvas
         }
@@ -151,7 +169,7 @@
 
             /* 创建场景 */
             scene = new THREE.Scene();
-            // scene.rotateY(4);
+            scene.rotateY(0);
 
             /* 设置雾 */
             // scene.fog = new THREE.Fog(0xffffff, 10, 1500);
@@ -167,7 +185,8 @@
 
             /* 创建透视相机 */
             camera = new THREE.PerspectiveCamera(fieldOfView, aspectRatio, nearPlane, farPlane);
-            camera.position.set(1000, 1000, 1000);
+            const camNum = 700
+            camera.position.set(camNum, camNum, camNum);
 
             /* 创建渲染器 */
             renderer = new THREE.WebGLRenderer({
@@ -206,6 +225,7 @@
                 gScene.scale.set(1, 1, 1);
                 loading()
                 scene.add(gScene);
+                addBox()
             });
         };
 
@@ -227,53 +247,79 @@
         create();
         createLights();
 
-        const material = new THREE.LineBasicMaterial({
-            color: 0x000000
-        });
+        // 文字框分组
+        let group = null
 
-        const points = [];
-        points.push(new THREE.Vector3(0, 400, 0));
-        points.push(new THREE.Vector3(100, 400, 0));
+        function addBox() {
+            /* 添加文字 */
+            const canvasTexture = new THREE.CanvasTexture(createText())
+            /* 平面几何 */
+            const geometryT = new THREE.PlaneGeometry( cardW, cardW );
+            var materialT = new THREE.MeshBasicMaterial({
+                color: 0xffffff,
+                // 设置纹理贴图
+                map: canvasTexture, 
+                /* 材质透明 */
+                transparent: true,
+            });
+            const planeT = new THREE.Mesh( geometryT, materialT );
+            planeT.position.set(cardW/2, cardW/2, -30)
+            planeT.rotateY(0.7)
+            planeT.rotateX(-0.4)
+            group = new THREE.Group();
+            group.position.set(300, 600, 300)
+            group.rotateY(0)
+            group.rotateX(0)
+            group.add(planeT);
+            scene.add(group);
+        }
 
-        const geometry = new THREE.BufferGeometry().setFromPoints(points);
-
-        const line = new THREE.Line(geometry, material);
-        scene.add(line);
-        
-        /* 添加文字 */
-        const canvasTexture = new THREE.CanvasTexture(createText())
-        /* 平面几何 */
-        const geometryT = new THREE.PlaneGeometry( 200, 200 );
-        var materialT = new THREE.MeshBasicMaterial({
-            color: 0xffffff,
-            // 设置纹理贴图
-            map: canvasTexture, 
-            transparent: true,
-        });
-        /* 材质透明 */
-        // materialT.colorWrite = true
-        // materialT.transparent = true
-        const planeT = new THREE.Mesh( geometryT, materialT );
-        planeT.position.set(300, 600, 0)
-        scene.add( planeT );
-        planeT.center()
-        planeT.rotateY(0.5)
-
-        function addLint() {
+        function addLine() {
             const material = new THREE.LineBasicMaterial({
                 color: 0xF59A0D
             });
             const points = [];
             points.push( new THREE.Vector3( 0, 570, 30 ) );
-            points.push( new THREE.Vector3( 200, 570, 0 ) );
+            points.push( new THREE.Vector3( 390, 610, 300 ) );
             const geometry = new THREE.BufferGeometry().setFromPoints( points );
             const line = new THREE.Line( geometry, material );
+            // const points1 = [];
+            // points1.push( new THREE.Vector3( 300, 600, 300 ) );
+            // points1.push( new THREE.Vector3( 300, 900, 300 ) );
+            // const geometry1 = new THREE.BufferGeometry().setFromPoints( points1 );
+            // const line1 = new THREE.Line( geometry1, material );
+            // const points2 = [];
+            // points2.push( new THREE.Vector3( 300, 600, 300 ) );
+            // points2.push( new THREE.Vector3( 600, 600, 300 ) );
+            // const geometry2 = new THREE.BufferGeometry().setFromPoints( points2 );
+            // const line2 = new THREE.Line( geometry2, material );
             scene.add( line );
+            // scene.add( line1 );
+            // scene.add( line2 );
         }
-        addLint()
+        addLine()
 
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        /* 你能够垂直旋转的角度的上限，范围是0到Math.PI，其默认值为Math.PI */
         controls.maxPolarAngle = 1
+        let originalY = controls.getAzimuthalAngle()
+        let originalX = controls.getPolarAngle()
+        let angelY = 0
+        let angelX = 0
+        // 保持初始状态
+        controls.saveState()
+        console.log(originalY, originalX, THREE.Math.radToDeg(originalX), THREE.Math.degToRad(90));
+        controls.addEventListener('change', () =>{
+            // 获得当前的水平旋转，单位为弧度
+            angelY = controls.getAzimuthalAngle()
+            // 获得当前的垂直旋转，单位为弧度
+            angelX = controls.getPolarAngle()
+            console.log('水平旋转度数：',THREE.Math.radToDeg(angelY));
+            // group.rotateY(angelY - originalY)
+            // group.rotateX(angelX - originalX)
+            originalY = angelY
+            originalX = angelX
+        })
         function animate() {
             requestAnimationFrame(animate);
             controls.update();
@@ -282,6 +328,15 @@
             // console.log( );
             renderer.render(scene, camera);
         }
+
+        document.querySelector('#reset').addEventListener('click', () => {
+            // originalY = angelY
+            // originalX = angelX
+            // group.rotateY(0.7853981633974483)
+            // group.rotateX(0.9553166181245093)
+
+            controls.reset ()
+        })
 
         animate()
     </script>
