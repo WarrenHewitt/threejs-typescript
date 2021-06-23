@@ -163,7 +163,7 @@
             HEIGHT,
             WIDTH;
 
-        const create = () => {
+        const initThree = () => {
             HEIGHT = window.innerHeight;
             WIDTH = window.innerWidth;
 
@@ -244,7 +244,7 @@
             camera.updateProjectionMatrix();
         }, false);
 
-        create();
+        initThree();
         createLights();
 
         // 文字框分组
