@@ -2,7 +2,7 @@
 
 1. 初始化一个 node 项目，生成 package.json
 
-2. 第二部 安装 webpack 相关包
+2. 第二步 安装 webpack 相关包
 ```
 webpack
 webpack-cli
