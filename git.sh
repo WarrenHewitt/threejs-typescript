@@ -8,7 +8,6 @@ method=${1:-"pull"} # 设置默认参数 注意 $1 的写法，:- 表示为空�
 { 
     git add -A
     git commit -m 'regular update'
-    echo "commit 完成"
 } || {
     echo '更改已commit 直接push'
     # git push
