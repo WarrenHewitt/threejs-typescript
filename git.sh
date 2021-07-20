@@ -8,12 +8,14 @@ method=${1:-"pull"} # 设置默认参数 注意 $1 的写法，:- 表示为空�
 { 
     git add -A
     git commit -m 'regular update'
+    # 这里后面不要跟语句，否者这个模块的返回就是 true 就不会进入下面的模块执行
 } || {
     echo '更改已commit 直接push'
     # git push
-    # exit 0
+    exit 0
 }
 
+    echo "commit 完成"
 
 if [ method = "push" ]; then
     echo "git push"
