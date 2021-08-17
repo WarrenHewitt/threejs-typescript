@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>虚拟巡检</title>
+    <script src="./js/three.js"></script>
+    <!-- <script src="./js/three.module.js"></script> -->
+    <script src="./js/stats.min.js"></script>
+    <script src="./js/GLTFLoader.js"></script>
+    <script src="./js/FBXLoader.js"></script>
+    <script src="./js/OrbitControls.js"></script>
+    <script src="./initMethods.js"></script>
+    <script src="https://unpkg.com/fflate"></script>
+    <style>
+        html {
+            width: 100%;
+            height: 100%;
+        }
+
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: rgb(218, 218, 218);
+        }
+
+        canvas {
+            width: 100vw;
+            height: 100vh;
+        }
+
+        
+    </style>
+</head>
+
+<body>
+    <div id="canvas"></div>
+
+    <script>
+        createStats()
+        
+        /* 创建一个正方体 */
+        const createCube = () => {
+            /* 立方体 */
+            var cubeGeometry = new THREE.BoxGeometry(100,100,100)
+
+            /* 材质 */
+            var cubeMaterial = new THREE.MeshLambertMaterial({ color: 0x00ff00 })
+
+            cube = new THREE.Mesh(cubeGeometry, cubeMaterial)
+            /* 打开阴影 */
+            cube.castShadow = true
+
+            /* 设置立方体的位置 */
+            cube.position.x = 0
+            cube.position.y = 0
+            cube.position.z = 0
+
+            /* 将立方体加入到场景 */
+            scene.add(cube)
+
+            console.log('create cube');
+        }
+
+
+        /**
+         * 初始化
+         * */
+        const initThree = () => {
+            createScene()
+            
+            createCamera()
+            
+            createAxesHelper()
+
+            // createCube()
+
+            // createLight()
+
+            createRender()
+
+            createControl()
+            
+            animate()
+        };
+
+        var clock = new THREE.Clock();
+
+        /*
+        * 动画
+        */
+       var mixers = [];
+        const animate = function () {
+            requestAnimationFrame( animate );
+            // controls.update();
+            // renderer.render( scene, camera );
+
+            var delta = clock.getDelta();
+            for ( var i = 0; i < mixers.length; i ++ ) { // 重復播放動畫
+                mixers[ i ].update( delta );
+            }
+
+            renderer.render( scene, camera );
+        };
+        
+        initThree()
+
+        // fbxLoader = 
+        // loadModule('./module/walk.fbx', new THREE.FBXLoader())
+        // var loader = new THREE.FBXLoader();
+		// loader.load('./module/walk.fbx', function (object) {
+		// 	object.traverse( function ( child ) {
+        //         if ( child.isMesh ) {
+        //             child.castShadow = true;
+        //             child.receiveShadow = true;
+        //         }
+        //     } );
+        //     object.rotation.y = Math.PI/2;
+        //     //object.rotation.x = -Math.PI/2 - Math.PI/12;
+        //     object.position.set(0, -0.15, 0.3);
+        //     console.log(object.position);
+        //     object.scale.set(.003, .003, .003);
+        //     scene.add( object );
+		// });
+
+        let loader = new THREE.GLTFLoader();
+        loader.load("./module/walk.gltf", (gltf) => {
+            // var mixer = new THREE.AnimationMixer(gltf.scene)
+
+            scene.add(gltf.scene)
+            var mixer = new THREE.AnimationMixer( gltf.scene.children[2] ); 
+            mixer.clipAction( gltf.animations[ 0 ] ).setDuration( 1 ).play();
+            mixers.push( mixer );
+
+        });
+
+
+
+    </script>
+
+</body>
+
+</html>

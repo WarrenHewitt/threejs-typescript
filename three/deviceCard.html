@@ -323,10 +323,7 @@
         function animate() {
             requestAnimationFrame(animate);
             controls.update();
-            /* 水平旋转 */
-            // planeT.rotateY(controls.getAzimuthalAngle())
-            // console.log( );
-            renderer.render(scene, camera);
+            renderer.render(scene, camera); 
         }
 
         document.querySelector('#reset').addEventListener('click', () => {
